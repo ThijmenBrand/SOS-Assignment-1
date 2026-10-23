@@ -81,13 +81,22 @@ if errorlevel 1 (
 rem --- 2. Hand over to NMake --------------------------------------------------
 rem Makefile.msvc finds OpenSSL, compiles, links and copies libcrypto next to
 rem the executables. Everything after build.bat is passed straight through.
+rem
+rem Deleting build output needs no library, so tell the makefile to skip its
+rem OpenSSL probe when the only target is "clean" - otherwise "build.bat clean"
+rem would fail on a machine where OpenSSL is not installed (yet).
 
-nmake /nologo /f Makefile.msvc %*
+set "NMAKE_EXTRA="
+if /i "%~1"=="clean" if "%~2"=="" set "NMAKE_EXTRA=NO_OPENSSL=1"
+
+nmake /nologo /f Makefile.msvc %NMAKE_EXTRA% %*
 if errorlevel 1 (
     echo.
     echo Build FAILED.
     exit /b 1
 )
+
+if /i "%~1"=="clean" exit /b 0
 
 echo.
 echo Build OK.  Run the programs with:

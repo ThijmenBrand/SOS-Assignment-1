@@ -8,6 +8,9 @@
 # Supported: Linux (incl. WSL), macOS (Homebrew OpenSSL 3), Windows
 # (MSYS2/MinGW-w64 shell, or cmd.exe with mingw32-make).
 #
+# Native Windows without MSYS2 uses the Microsoft toolchain instead: run
+# build.bat, which drives Makefile.msvc. See Building-Cross-OS.md.
+#
 # Override anything from the command line, e.g.
 #   make OPENSSL_PREFIX="C:/Program Files/OpenSSL-Win64"
 
