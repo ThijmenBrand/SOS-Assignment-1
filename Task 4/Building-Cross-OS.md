@@ -12,7 +12,9 @@ The same C sources build on all three platforms; only the build driver differs.
 `Makefile` is the GNU make build (macOS, Linux, MinGW); it detects the platform
 and sets the compiler, the OpenSSL location and the executable suffix itself.
 `Makefile.msvc` is the NMake build for native Windows and `build.bat` is a
-wrapper around it that locates Visual Studio first.
+wrapper around it that locates Visual Studio first. On a Windows machine that
+has no toolchain yet, `install-deps.cmd` installs the prerequisites and then
+calls `build.bat`.
 
 Either way the result is `task41enc` (encryptor) and `task41dec` (decryptor),
 or `task41enc.exe` and `task41dec.exe` on Windows. The `clean` target removes
@@ -36,6 +38,36 @@ automatically.
 There is no need for MSYS2, `pacman` or MinGW. The native route uses the
 Microsoft toolchain and the official OpenSSL build, both of which are ordinary
 Windows installers.
+
+### The short way
+
+On a machine with nothing installed, one command does the lot — it installs the
+prerequisites and then builds:
+
+```
+install-deps.cmd
+```
+
+It reports what is already present, lists what it is about to install, asks for
+confirmation, and raises a UAC prompt only once it has work to do. Running it
+again on a ready machine installs nothing and just builds. `install-deps.cmd
+-SkipBuild` stops after the install, and `-Yes` skips the confirmation.
+
+What it installs is exactly the two things below, so if either is already on the
+machine that step is skipped. The compiler comes from Microsoft's official
+bootstrapper, OpenSSL through `winget` (or Chocolatey, if that is what the
+machine has). When neither package manager is available the script says so and
+prints the manual download link; you can also hand it the installer directly:
+
+```
+install-deps.cmd -OpenSslUrl "https://slproweb.com/download/Win64OpenSSL-3_5_4.exe"
+```
+
+`install-deps.cmd` is a wrapper around `install-deps.ps1`; it exists so that
+PowerShell's execution policy cannot block the script and so the thing can be
+right-clicked and run as administrator. Run the `.ps1` directly if you prefer.
+
+### The manual way
 
 **1. Install the compiler.** Either Visual Studio 2019/2022 (any edition,
 including Community) or the free standalone
