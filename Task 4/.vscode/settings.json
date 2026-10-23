@@ -1,0 +1,11 @@
+{
+  "clangd.path": "/usr/bin/clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--clang-tidy",
+    "--header-insertion=never"
+  ],
+  "[c]": {
+    "editor.suggest.insertMode": "replace"
+  }
+}

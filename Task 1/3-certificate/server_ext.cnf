@@ -1,0 +1,23 @@
+[v3_server]
+# Same leaf-certificate constraints the CSR requested - restated here because
+# the CA, not the requester, decides what ends up in the certificate.
+basicConstraints       = critical,CA:FALSE
+keyUsage               = critical,digitalSignature,keyEncipherment
+extendedKeyUsage       = serverAuth
+
+# These two are added by the CA and were not in the CSR:
+# subjectKeyIdentifier   - fingerprint of the server's public key
+# authorityKeyIdentifier - points at the CA's subjectKeyIdentifier from step 1,
+#                          which is how a verifier walks the chain to its issuer.
+#                          Without it chain building falls back to matching
+#                          issuer names, which is ambiguous once a CA has
+#                          rolled its key.
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always
+
+subjectAltName         = @alt_names
+
+[alt_names]
+DNS.1 = server.group_2.local
+DNS.2 = localhost
+IP.1  = 127.0.0.1

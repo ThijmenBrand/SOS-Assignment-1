@@ -1,0 +1,5 @@
+-std=c11
+-Wall
+-Wextra
+-Wpedantic
+-I/opt/homebrew/opt/openssl@3/include

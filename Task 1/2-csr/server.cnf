@@ -1,0 +1,30 @@
+[req]
+default_bits       = 4096
+prompt             = no                 # non-interactive, required for scripting
+default_md         = sha256
+distinguished_name = dn
+req_extensions     = v3_req             # section used because this is a CSR
+
+[dn]
+C  = AT
+CN = server.group_2.local                       # max 64 characters
+
+[v3_req]
+# This is a leaf certificate: it must never be able to sign other certificates.
+basicConstraints = critical,CA:FALSE
+# digitalSignature  -> signing the key exchange in (EC)DHE handshakes
+# keyEncipherment   -> legacy RSA key transport
+keyUsage         = critical,digitalSignature,keyEncipherment
+# This key authenticates a server - not a client, not code.
+extendedKeyUsage = serverAuth
+subjectAltName   = @alt_names
+
+[alt_names]
+# subjectAltName is the extension that actually matters. Since 2017 every
+# mainstream client (Chrome, Firefox, curl, Go, modern OpenSSL) ignores the CN
+# entirely for hostname verification - RFC 2818's CN fallback was deprecated by
+# RFC 6125 and removed from implementations. A certificate with a perfect CN but
+# no SAN is simply invalid for every hostname.
+DNS.1 = server.group_2.local
+DNS.2 = localhost
+IP.1  = 127.0.0.1

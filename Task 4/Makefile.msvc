@@ -1,0 +1,127 @@
+# Makefile.msvc - NMake makefile for Task 4.1 on native Windows.
+#
+# This is the Visual Studio / MSVC build. It needs no MSYS2, no pacman and no
+# MinGW: only the Visual Studio Build Tools and the official OpenSSL 3 Win64
+# installer. The GNU Makefile in this directory is still the build for macOS,
+# Linux and MinGW; the two produce the same two programs.
+#
+# Use build.bat, which finds the compiler and OpenSSL and then calls this
+# file, or run it yourself from a "x64 Native Tools Command Prompt":
+#
+#   nmake /f Makefile.msvc
+#   nmake /f Makefile.msvc run-enc
+#   nmake /f Makefile.msvc clean
+#
+# If OpenSSL lives somewhere this file does not probe, say so explicitly:
+#
+#   nmake /f Makefile.msvc OPENSSL_PREFIX="D:\libs\openssl-3"
+
+# --- OpenSSL location --------------------------------------------------------
+# Probe the places the common installers use. First match wins; an
+# OPENSSL_PREFIX given on the command line or in the environment is kept.
+!IFNDEF OPENSSL_PREFIX
+!IF EXIST("C:\Program Files\OpenSSL-Win64\include\openssl\evp.h")
+OPENSSL_PREFIX = C:\Program Files\OpenSSL-Win64
+!ELSE IF EXIST("C:\OpenSSL-Win64\include\openssl\evp.h")
+OPENSSL_PREFIX = C:\OpenSSL-Win64
+!ELSE IF EXIST("C:\Program Files\OpenSSL\include\openssl\evp.h")
+OPENSSL_PREFIX = C:\Program Files\OpenSSL
+!ELSE IF EXIST("$(USERPROFILE)\vcpkg\installed\x64-windows\include\openssl\evp.h")
+OPENSSL_PREFIX = $(USERPROFILE)\vcpkg\installed\x64-windows
+!ELSE IF EXIST("C:\vcpkg\installed\x64-windows\include\openssl\evp.h")
+OPENSSL_PREFIX = C:\vcpkg\installed\x64-windows
+!ENDIF
+!ENDIF
+
+!IFNDEF OPENSSL_PREFIX
+!ERROR OpenSSL was not found. Install "Win64 OpenSSL v3.x" (the full package, \
+not "Light"), or pass the location: nmake /f Makefile.msvc OPENSSL_PREFIX="C:\path\to\openssl"
+!ENDIF
+
+# The import library sits in a different place in every OpenSSL packaging:
+# 3.x from the Win64 installer, 1.1.1 from the same installer, and vcpkg.
+!IF EXIST("$(OPENSSL_PREFIX)\lib\VC\x64\MD\libcrypto.lib")
+OPENSSL_LIB = "$(OPENSSL_PREFIX)\lib\VC\x64\MD\libcrypto.lib"
+!ELSE IF EXIST("$(OPENSSL_PREFIX)\lib\VC\libcrypto64MD.lib")
+OPENSSL_LIB = "$(OPENSSL_PREFIX)\lib\VC\libcrypto64MD.lib"
+!ELSE IF EXIST("$(OPENSSL_PREFIX)\lib\libcrypto.lib")
+OPENSSL_LIB = "$(OPENSSL_PREFIX)\lib\libcrypto.lib"
+!ELSE
+!ERROR Found OpenSSL headers in $(OPENSSL_PREFIX) but no libcrypto.lib. \
+The "Light" installer ships no import libraries - install the full package.
+!ENDIF
+
+# libcrypto-3-x64.dll has to sit next to the .exe (or on PATH) at run time.
+# Copying it into this directory keeps the programs runnable from Explorer.
+!IF EXIST("$(OPENSSL_PREFIX)\bin\libcrypto-3-x64.dll")
+OPENSSL_DLL = "$(OPENSSL_PREFIX)\bin\libcrypto-3-x64.dll"
+!ELSE IF EXIST("$(OPENSSL_PREFIX)\bin\libcrypto-1_1-x64.dll")
+OPENSSL_DLL = "$(OPENSSL_PREFIX)\bin\libcrypto-1_1-x64.dll"
+!ELSE
+OPENSSL_DLL =
+!ENDIF
+
+# --- Compiler and linker -----------------------------------------------------
+# /W4 is MSVC's equivalent of -Wall -Wextra. _CRT_SECURE_NO_WARNINGS silences
+# C4996 on fopen/strcpy-style calls; the code already bounds every one of them.
+#
+# /MD is not optional: fatal() hands a FILE* (stderr) to OpenSSL's
+# ERR_print_errors_fp(), so the program and libcrypto have to share one C
+# runtime. The official OpenSSL Win64 builds are /MD against the UCRT, and
+# this matches them. Switching to /MT would need OpenSSL's applink shim.
+CFLAGS  = /nologo /std:c11 /W4 /O2 /MD /utf-8 \
+          /D_CRT_SECURE_NO_WARNINGS \
+          /I"$(OPENSSL_PREFIX)\include"
+
+# advapi32/user32/ws2_32/crypt32 are what a statically linked libcrypto pulls
+# in; with the DLL build they are ignored, so listing them is harmless.
+LDLIBS  = $(OPENSSL_LIB) advapi32.lib user32.lib ws2_32.lib crypt32.lib
+LDFLAGS = /nologo
+
+# --- Targets -----------------------------------------------------------------
+COMMON_OBJ = common.obj
+OBJS       = task41enc.obj task41dec.obj $(COMMON_OBJ)
+BINS       = task41enc.exe task41dec.exe
+
+all: banner $(BINS) dll
+
+banner:
+	@echo OpenSSL: $(OPENSSL_PREFIX)
+
+task41enc.exe: task41enc.obj $(COMMON_OBJ)
+	link $(LDFLAGS) /out:$@ task41enc.obj $(COMMON_OBJ) $(LDLIBS)
+
+task41dec.exe: task41dec.obj $(COMMON_OBJ)
+	link $(LDFLAGS) /out:$@ task41dec.obj $(COMMON_OBJ) $(LDLIBS)
+
+task41enc.obj: task41enc.c common.h
+task41dec.obj: task41dec.c common.h
+common.obj:    common.c    common.h
+
+.c.obj:
+	$(CC) $(CFLAGS) /c /Fo$@ $<
+
+# Put libcrypto next to the executables so they run without PATH changes.
+# (A static OpenSSL has no DLL to copy, hence the empty branch.)
+dll:
+!IF "$(OPENSSL_DLL)" != ""
+	@copy /Y $(OPENSSL_DLL) . >nul
+!ELSE
+	@rem nothing to copy - OpenSSL is linked statically
+!ENDIF
+
+run-enc: all
+	task41enc.exe
+
+run-dec: all
+	task41dec.exe
+
+clean:
+	-@if exist task41enc.exe del /Q /F task41enc.exe
+	-@if exist task41dec.exe del /Q /F task41dec.exe
+	-@if exist *.obj        del /Q /F *.obj
+	-@if exist *.ilk        del /Q /F *.ilk
+	-@if exist *.pdb        del /Q /F *.pdb
+	-@if exist text.ct      del /Q /F text.ct
+	-@if exist libcrypto-3-x64.dll   del /Q /F libcrypto-3-x64.dll
+	-@if exist libcrypto-1_1-x64.dll del /Q /F libcrypto-1_1-x64.dll

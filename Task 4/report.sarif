@@ -1,0 +1,257 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "wbsec",
+          "informationUri": "https://example.invalid/wbsec",
+          "version": "0.1.0",
+          "rules": [
+            {
+              "id": "CWE-770",
+              "name": "malloc() size comes from ftell() (line 242) with no upper bound check \u2014 unbounded allocati",
+              "shortDescription": {
+                "text": "malloc() size comes from ftell() (line 242) with no upper bound check \u2014 unbounded allocati"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "cwe-770"
+                ]
+              }
+            },
+            {
+              "id": "CWE-197",
+              "name": "Length len is cast to (int) as a call argument \u2014 values above the type's range truncate or",
+              "shortDescription": {
+                "text": "Length len is cast to (int) as a call argument \u2014 values above the type's range truncate or"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "cwe-197"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "originalUriBaseIds": {
+        "SRCROOT": {
+          "uri": "file:///Users/thijmenbrand/Library/CloudStorage/SynologyDrive-Drive/%5B01%5D%20Documenten/Studie/Master/Semester%201/Software%20Security/Assignment%201/Task%204/"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "toolExecutionNotifications": [
+            {
+              "level": "warning",
+              "message": {
+                "text": "static engine codeql[cpp]: degraded: traced build failed, extracted with --build-mode=none"
+              },
+              "descriptor": {
+                "id": "wbsec/engine/codeql[cpp]"
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "wbsec/engineStatus": {
+          "codeql[cpp]": "degraded: traced build failed, extracted with --build-mode=none",
+          "clang": "ok",
+          "builtin": "ok"
+        },
+        "wbsec/backends": [
+          "claude:opus@high",
+          "claude:sonnet@high"
+        ],
+        "wbsec/staticEngines": [
+          "codeql",
+          "clang",
+          "builtin"
+        ],
+        "wbsec/harness": "makefile"
+      },
+      "results": [
+        {
+          "ruleId": "CWE-770",
+          "level": "warning",
+          "message": {
+            "text": "malloc() size comes from ftell() (line 242) with no upper bound check \u2014 unbounded allocation / memory exhaustion"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "common.c",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 246
+                }
+              }
+            }
+          ],
+          "properties": {
+            "wbsec/confidence": "confirmed",
+            "wbsec/cvssVector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+            "wbsec/cvssScore": 4.8,
+            "wbsec/pocStatus": "confirmed",
+            "wbsec/disposition": "Report",
+            "wbsec/engines": [
+              "builtin"
+            ],
+            "wbsec/severityFlagged": false,
+            "wbsec/pocBackend": "claude:opus@high",
+            "wbsec/pocOracle": "sanitizer: ERROR: AddressSanitizer: requested; location matched against common.c:246"
+          },
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "common.c",
+                            "uriBaseId": "SRCROOT"
+                          },
+                          "region": {
+                            "startLine": 242
+                          }
+                        },
+                        "message": {
+                          "text": "[source] long size = ftell(f);"
+                        }
+                      }
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "common.c",
+                            "uriBaseId": "SRCROOT"
+                          },
+                          "region": {
+                            "startLine": 246
+                          }
+                        },
+                        "message": {
+                          "text": "[sink] char *buf = malloc((size_t)size + 1);"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "CWE-197",
+          "level": "warning",
+          "message": {
+            "text": "Length len is cast to (int) as a call argument \u2014 values above the type's range truncate or turn negative"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "common.c",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 67
+                }
+              }
+            }
+          ],
+          "properties": {
+            "wbsec/confidence": "confirmed",
+            "wbsec/cvssVector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+            "wbsec/cvssScore": 5.4,
+            "wbsec/pocStatus": "confirmed",
+            "wbsec/disposition": "Report",
+            "wbsec/engines": [
+              "builtin"
+            ],
+            "wbsec/severityFlagged": false,
+            "wbsec/pocBackend": "claude:opus@high",
+            "wbsec/pocOracle": "sanitizer: ERROR: AddressSanitizer: heap-buffer-overflow; location matched against common.c:67"
+          }
+        },
+        {
+          "ruleId": "CWE-197",
+          "level": "note",
+          "message": {
+            "text": "Length salt_len is cast to (int) as a call argument \u2014 values above the type's range truncate or turn negative"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "common.c",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 55
+                }
+              }
+            }
+          ],
+          "properties": {
+            "wbsec/confidence": "confirmed",
+            "wbsec/cvssVector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N",
+            "wbsec/cvssScore": 2.1,
+            "wbsec/pocStatus": "confirmed",
+            "wbsec/disposition": "Report",
+            "wbsec/engines": [
+              "builtin"
+            ],
+            "wbsec/severityFlagged": false,
+            "wbsec/pocBackend": "claude:opus@high",
+            "wbsec/pocOracle": "sanitizer: ERROR: AddressSanitizer: requested; location matched against common.c:55"
+          }
+        },
+        {
+          "ruleId": "CWE-197",
+          "level": "note",
+          "message": {
+            "text": "Length len is cast to (int) as a call argument \u2014 values above the type's range truncate or turn negative"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "common.c",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 158
+                }
+              }
+            }
+          ],
+          "properties": {
+            "wbsec/confidence": "probable",
+            "wbsec/cvssVector": "CVSS:4.0/AV:L/AC:H/AT:P/PR:L/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N",
+            "wbsec/cvssScore": 2.0,
+            "wbsec/pocStatus": "attempted",
+            "wbsec/disposition": "Low-priority note",
+            "wbsec/engines": [
+              "builtin"
+            ],
+            "wbsec/severityFlagged": false,
+            "wbsec/pocBackend": "claude:opus@high",
+            "wbsec/pocOracle": "sanitizer: no sanitiser report in the run output"
+          }
+        }
+      ]
+    }
+  ]
+}

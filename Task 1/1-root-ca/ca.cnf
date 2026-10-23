@@ -1,0 +1,21 @@
+[req]
+default_bits       = 4096
+prompt             = no                 # never ask interactively
+default_md         = sha256       # SHA-256 signature hash
+distinguished_name = dn
+x509_extensions    = v3_ca              # section used because of -x509
+
+[dn]
+C  = AT
+CN = Group_2
+
+[v3_ca]
+# CA:TRUE is what actually makes this a CA - without it every verifier rejects
+# the chain. pathlen:0 means it may only sign end-entity certificates, never a
+# sub-CA. 'critical' forces clients to understand the extension or reject.
+basicConstraints     = critical,CA:TRUE,pathlen:0
+# This key may sign certificates and revocation lists, and nothing else.
+keyUsage             = critical,keyCertSign,cRLSign
+# A hash of the CA public key. The server certificate references it later as
+# its Authority Key Identifier so a verifier can locate the issuer.
+subjectKeyIdentifier = hash
