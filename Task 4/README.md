@@ -137,6 +137,35 @@ We do this using the earlier described [b64_encode](#function-b64_encode) functi
 # Decode.c
 Now lets decode it. Because as we have seen in ISM, encryption without a key breaches the Parkerian Hexad Utility. We have the data, but its worth nothing.
 
+## Read file
+We start by reading the input file with its base64 encoded content. We do this with the `read_text_file` function defined in common.c file. When we have the base64 encoded values we can decode them using the [b64_decode](#function-b64_decode) function.
 
+## Split blob into needed values
+We take the read text, and first check if the length of the blob is at least the same length as the header size. (The header size being the length of the Salt + IV + Tag).
 
+```c
+    if (blob_len <= HEADER_LEN) {
+        err = CT_FILENAME " is truncated or empty";
+        goto cleanup;
+    }
+```
+Because if the length of the total blob is smaller then the length of the header. We can be sure that the data is corrupted.
 
+## Prompt password
+For the encryption, we derived a key based on a password. We need to prompt for that password again, to be able to derive the decryption key again. We do this again using the commonly defined `prompt_password` function in the common.c file.
+
+## Derive key from password
+From the [Split blob into needed values](#split-blob-into-needed-values) we got the IV and the SALT, and those can we now use to derive the same key we used for encryption, to decrypt.
+
+We do this using the `derive_key` function, with underlaying the [kdf_pbkdf2_sha256](#kdf_pbkdf2_sha256) function. After we clean up the password from memory again, because it is not needed anymore.
+
+## Decrypt and Authenticate
+We start by allocating memory for the decrypted plaintext in memory. After which we can continue and use the `aes_gcm_decrypt` function. In this function we give the derived key, the gotten IV and SALT and the authentication tag.
+
+If the cipher text or tag has been tampered with, the function will return -1. If this happens, we should not print the output and clean up.
+
+Also after this process, we can clean up the key again, because we do not need it anymore from this point on.
+
+## Cleanup
+
+We clean up everything again and we are done!
